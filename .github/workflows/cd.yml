@@ -55,7 +55,7 @@ jobs:
             sudo apt install python3-pip -y
 
             echo "📦 Creating and activating a virtualenv."
-            python3 -m venv venv
+            sudo python3 -m venv venv
             source venv/bin/activate
 
             echo "📦 Installing project dependencies."
