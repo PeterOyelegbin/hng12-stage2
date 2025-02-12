@@ -59,30 +59,15 @@ jobs:
             pip install --no-cache-dir -r requirements.txt
 
             echo "🛠 Configuring Nginx."
-            sudo tee /etc/nginx/sites-available/default > /dev/null <<EOL
-            server {
-                listen 80;
-                server_name yourdomain.com;
-
-                location / {
-                    proxy_pass http://127.0.0.1:8000;
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                }
-
-                error_page 502 /502.html;
-            }
-            EOL
+            sudo cp default /etc/nginx/sites-available/default
+            sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
             echo "🔄 Restarting Nginx to apply changes."
             sudo systemctl restart nginx
 
             echo "🚀 Starting Uvicorn server."
-            nohup /home/${{ secrets.USER }}/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 &
-
+            uvicorn main:app --host 0.0.0.0 --port 8000 --reload
           EOF
-
+          
       - name: Confirm Deployment Status
         run: echo "✅ Deployment completed successfully."
