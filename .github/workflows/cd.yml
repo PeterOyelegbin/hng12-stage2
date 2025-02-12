@@ -1,0 +1,56 @@
+name: CD Pipeline
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display Deployment Trigger Information
+        run: |
+          echo "🚀 Deployment triggered by a ${{ github.event_name }} event to the main branch."
+          echo "🔄 Updating the deployed API with the latest changes."
+
+      - name: Checkout Repository Code
+        uses: actions/checkout@v3
+
+      - name: Connect to EC2 and Deploy API
+        run: |
+          echo "🔗 Connecting to AWS EC2 instance to deploy API."
+          ssh -i ${{ DEV_KP }}.pem ${{ USER }}@${{ SERVER }} << 'EOF'
+            echo "📂 Updating package lists."
+            sudo apt update
+            
+            echo "🌐 Checking and Installing Nginx."
+            if ! command -v nginx &> /dev/null; then
+              echo "Installing Nginx..."
+              sudo apt install -y nginx
+              sudo systemctl enable nginx
+              sudo systemctl start nginx
+            fi
+
+            echo "📂 Navigating to API directory."
+            cd /usr/share/nginx/html
+
+            echo "🔄 Pulling latest changes from repository."
+            git pull ${{ github.repository }}
+            
+            echo "🌐 Restarting Nginx to apply changes."
+            sudo systemctl restart nginx
+
+            echo "📦 Installing project dependencies."
+            pip install -r requirements.txt
+
+            echo "🚀 Starting Uvicorn server."
+            uvicorn main:app
+
+          EOF
+
+      - name: Confirm Deployment Status
+        run: echo "✅ Deployment completed successfully."
