@@ -42,6 +42,7 @@ jobs:
             fi
 
             echo "📂 Navigating to API directory."
+            chmod 777 /usr/share/nginx/html
             cd /usr/share/nginx/html
 
             echo "🔄 Pulling latest changes from repository."
@@ -59,7 +60,7 @@ jobs:
             source venv/bin/activate
 
             echo "📦 Installing project dependencies."
-            pip install -r requirements.txt
+            sudo pip install -r requirements.txt
 
             echo "🚀 Starting Uvicorn server."
             uvicorn main:app
