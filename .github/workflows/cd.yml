@@ -46,10 +46,18 @@ jobs:
             cd /usr/share/nginx/html
 
             echo "🔄 Pulling latest changes from repository."
-            git pull ${{ github.repository }}
+            git clone https://github.com/PeterOyelegbin/hng12-stage2.git
+            cd hng12-stage2
             
             echo "🌐 Restarting Nginx to apply changes."
             sudo systemctl restart nginx
+
+            echo "📦 Instaliing PIP."
+            sudo apt install python3-pip -y
+
+            echo "📦 Creating and activating a virtualenv."
+            python3 -m venv venv
+            source venv/bin/activate
 
             echo "📦 Installing project dependencies."
             pip install -r requirements.txt
