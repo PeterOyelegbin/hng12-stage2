@@ -20,10 +20,16 @@ jobs:
       - name: Checkout Repository Code
         uses: actions/checkout@v3
 
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEV_KP }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
       - name: Connect to EC2 and Deploy API
         run: |
           echo "🔗 Connecting to AWS EC2 instance to deploy API."
-          ssh -i ${{ secrets.DEV_KP }} ${{ secrets.USER }}@${{ secrets.SERVER }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa ${{ secrets.USER }}@${{ secrets.SERVER }} << 'EOF'
             echo "📂 Updating package lists."
             sudo apt update
             
