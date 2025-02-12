@@ -42,5 +42,4 @@ jobs:
           pytest
 
       - name: Report Test Status
-        if: always()
         run: echo "🍏 The test job has completed with status: ${{ job.status }}."
