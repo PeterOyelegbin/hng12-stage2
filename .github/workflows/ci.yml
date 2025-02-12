@@ -40,6 +40,3 @@ jobs:
         run: |
           echo "🖥️ Running tests using pytest."
           pytest
-
-      - name: Report Test Status
-        run: echo "🍏 The test job has completed with status: ${{ job.status }}."
