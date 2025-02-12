@@ -25,11 +25,12 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEV_KP }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          cat ~/.ssh/id_rsa
 
       - name: Connect to EC2 and Deploy API
         run: |
           echo "🔗 Connecting to AWS EC2 instance to deploy API."
-          ssh -i ~/.ssh/id_rsa ${{ secrets.USER }}@${{ secrets.SERVER }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.SERVER }} << 'EOF'
             echo "📂 Updating package lists."
             sudo apt update
             
