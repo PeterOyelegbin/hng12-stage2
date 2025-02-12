@@ -25,7 +25,6 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEV_KP }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          cat ~/.ssh/id_rsa
 
       - name: Connect to EC2 and Deploy API
         run: |
@@ -46,7 +45,7 @@ jobs:
             cd /usr/share/nginx/html
 
             echo "🔄 Pulling latest changes from repository."
-            git clone https://github.com/PeterOyelegbin/hng12-stage2.git
+            sudo git clone https://github.com/PeterOyelegbin/hng12-stage2.git
             cd hng12-stage2
             
             echo "🌐 Restarting Nginx to apply changes."
