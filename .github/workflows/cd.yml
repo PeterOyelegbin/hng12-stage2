@@ -48,8 +48,16 @@ jobs:
             cd /usr/share/nginx/html
 
             echo "🔄 Pulling latest changes from repository."
-            sudo git clone https://github.com/PeterOyelegbin/hng12-stage2.git
-            cd hng12-stage2
+            if [ -d "hng12-stage2" ]; then
+              echo "🔄 Pulling latest changes from repository."
+              cd hng12-stage2
+              sudo git reset --hard
+              sudo git pull origin main
+            else
+              echo "📂 Cloning repository for the first time."
+              sudo git clone https://github.com/PeterOyelegbin/hng12-stage2.git
+              cd hng12-stage2
+            fi
 
             echo "📦 Creating and activating a virtual environment outside the Nginx folder."
             python3 -m venv /home/${{ secrets.USER }}/venv
@@ -68,6 +76,6 @@ jobs:
             echo "🚀 Starting Uvicorn server."
             uvicorn main:app --host 0.0.0.0 --port 8000 --reload
           EOF
-          
+
       - name: Confirm Deployment Status
         run: echo "✅ Deployment completed successfully."
