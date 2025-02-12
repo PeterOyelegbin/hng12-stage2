@@ -41,8 +41,14 @@ jobs:
               sudo systemctl start nginx
             fi
 
+            echo "📦 Instaliing PIP."
+            sudo apt install python3-pip python3.12-venv -y
+
+            echo "📦 Creating and activating a virtualenv."
+            sudo python3 -m venv venv
+            source venv/bin/activate
+
             echo "📂 Navigating to API directory."
-            sudo chmod -R 777 /usr/share/nginx/html
             cd /usr/share/nginx/html
 
             echo "🔄 Pulling latest changes from repository."
@@ -51,13 +57,6 @@ jobs:
             
             echo "🌐 Restarting Nginx to apply changes."
             sudo systemctl restart nginx
-
-            echo "📦 Instaliing PIP."
-            sudo apt install python3-pip python3.12-venv -y
-
-            echo "📦 Creating and activating a virtualenv."
-            sudo python3 -m venv venv
-            source venv/bin/activate
 
             echo "📦 Installing project dependencies."
             sudo pip install -r requirements.txt
