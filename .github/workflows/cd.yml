@@ -27,20 +27,6 @@ jobs:
             echo "📂 Updating package lists."
             sudo apt update
             
-            echo "🐳 Checking and Installing Docker."
-            if ! command -v docker &> /dev/null; then
-              echo "Installing Docker..."
-              sudo apt install -y docker.io
-              sudo systemctl enable docker
-              sudo systemctl start docker
-            fi
-            
-            echo "🛠 Checking and Installing Docker Compose."
-            if ! command -v docker-compose &> /dev/null; then
-              echo "Installing Docker Compose..."
-              sudo apt install -y docker-compose
-            fi
-
             echo "🌐 Checking and Installing Nginx."
             if ! command -v nginx &> /dev/null; then
               echo "Installing Nginx..."
@@ -50,14 +36,20 @@ jobs:
             fi
 
             echo "📂 Navigating to API directory."
-            cd /path/to/api
-            echo "🔄 Pulling latest changes from repository."
-            git pull
-            echo "🐳 Restarting API with Docker Compose."
-            docker-compose up -d --build
+            cd /usr/share/nginx/html
 
+            echo "🔄 Pulling latest changes from repository."
+            git pull ${{ github.repository }}
+            
             echo "🌐 Restarting Nginx to apply changes."
             sudo systemctl restart nginx
+
+            echo "📦 Installing project dependencies."
+            pip install -r requirements.txt
+
+            echo "🚀 Starting Uvicorn server."
+            uvicorn main:app
+            
           EOF
 
       - name: Confirm Deployment Status
