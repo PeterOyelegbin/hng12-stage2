@@ -23,7 +23,7 @@ jobs:
       - name: Connect to EC2 and Deploy API
         run: |
           echo "🔗 Connecting to AWS EC2 instance to deploy API."
-          ssh ${{ user }}@${{ server }} << 'EOF'
+          ssh -i ${{ DEV_KP }}.pem ${{ USER }}@${{ SERVER }} << 'EOF'
             echo "📂 Updating package lists."
             sudo apt update
             
@@ -49,7 +49,7 @@ jobs:
 
             echo "🚀 Starting Uvicorn server."
             uvicorn main:app
-            
+
           EOF
 
       - name: Confirm Deployment Status
