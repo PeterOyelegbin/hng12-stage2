@@ -63,7 +63,7 @@ jobs:
 
             # Create a systemd service for FastAPI
             echo "*** 🛠 Creating systemd service for FastAPI... ***"
-            sudo tee /etc/systemd/system/fastapi.service > /dev/null <<EOT
+            sudo tee /etc/systemd/system/fastapi.service > /dev/null <<EOF
           [Unit]
           Description=FastAPI Application
           After=network.target
@@ -77,7 +77,7 @@ jobs:
 
           [Install]
           WantedBy=multi-user.target
-          EOT
+          EOF
 
             # Reload systemd, enable and start FastAPI service
             echo "*** 🔄 Starting FastAPI service... ***"
@@ -87,7 +87,7 @@ jobs:
 
             # Configure Nginx as a reverse proxy
             echo "*** 🛠 Configuring Nginx... ***"
-            sudo tee /etc/nginx/sites-available/default > /dev/null <<EOT
+            sudo tee /etc/nginx/sites-available/default > /dev/null <<EOF
           server {
               listen 80;
               server_name _;
@@ -100,7 +100,7 @@ jobs:
                   proxy_set_header X-Forwarded-Proto \$scheme;
               }
           }
-          EOT
+          EOF
 
             # Enable the Nginx configuration
             sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
