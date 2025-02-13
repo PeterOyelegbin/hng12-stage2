@@ -111,6 +111,8 @@ jobs:
 
             # Display status
             echo "*** 🚀 Deployment completed! ***"
+            sudo systemctl daemon-reload
+            sudo systemctl restart fastapi
             sudo systemctl status fastapi --no-pager
           EOF
 
