@@ -58,6 +58,30 @@ jobs:
             pip install --upgrade pip
             pip install -r requirements.txt
 
+            # Create a systemd service for FastAPI
+            echo "*** 🛠 Creating systemd service for FastAPI... ***"
+            cat <<EOF | sudo tee /etc/systemd/system/fastapi.service
+            [Unit]
+            Description=FastAPI Application
+            After=network.target
+
+            [Service]
+            User=ubuntu
+            Group=ubuntu
+            WorkingDirectory=/home/${{ USER }}/hng12-stage2
+            ExecStart=/home/${{ USER }}/hng12-stage2/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+            Restart=always
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+
+            # Reload systemd, enable and start FastAPI service
+            echo "*** 🔄 Starting FastAPI service... ***"
+            sudo systemctl daemon-reload
+            sudo systemctl enable fastapi
+            sudo systemctl start fastapi
+
             # Configure Nginx as a reverse proxy
             echo "*** 🛠 Configuring Nginx... ***"
             sudo cat <<EOF | sudo tee /etc/nginx/sites-available/default
@@ -79,8 +103,15 @@ jobs:
             sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
             sudo systemctl restart nginx
 
-            echo "🚀 Starting Uvicorn server."
-            uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+            # Open firewall ports
+            echo "*** 🛠 Allowing necessary ports through UFW... ***"
+            sudo ufw allow 'Nginx Full'
+            sudo ufw allow 8000
+            sudo ufw enable
+
+            # Display status
+            echo "*** 🚀 Deployment completed! ***"
+            sudo systemctl status fastapi --no-pager
           EOF
 
       - name: Confirm Deployment Status
