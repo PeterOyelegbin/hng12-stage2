@@ -23,13 +23,16 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEV_KP }}" > ~/.ssh/id_rsa
+          echo -e "${{ secrets.DEV_KP }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ vars.SERVER }} >> ~/.ssh/known_hosts
 
       - name: Connect to EC2 and Deploy API
         run: |
           echo "🔗 Connecting to AWS EC2 instance to deploy API."
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ vars.USER }}@${{ vars.SERVER }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa ${{ vars.USER }}@${{ vars.SERVER }} << 'EOF'
+            set -e  # Exit on error
+            
             # Update packages
             echo "*** 📂 Updating package lists ***"
             sudo apt update && sudo apt upgrade -y
@@ -38,7 +41,7 @@ jobs:
             echo "*** 📦 Installing dependencies ***"
             sudo apt install -y nginx git python3 python3-pip python3-venv
 
-            # Clone the GitHub application repository
+            # Clone or update the repository
             cd ~
             if [ -d "hng12-stage2" ]; then
                 echo "*** 🔄 Pulling latest changes from repository. ***"
@@ -51,7 +54,7 @@ jobs:
                 cd hng12-stage2
             fi
 
-            # Set up a virtual environment and install dependencies
+            # Set up virtual environment and install dependencies
             echo "*** 📦 Setting up virtual environment... ***"
             python3 -m venv venv
             source venv/bin/activate
@@ -60,47 +63,47 @@ jobs:
 
             # Create a systemd service for FastAPI
             echo "*** 🛠 Creating systemd service for FastAPI... ***"
-            cat <<EOF | sudo tee /etc/systemd/system/fastapi.service
-            [Unit]
-            Description=FastAPI Application
-            After=network.target
+            sudo tee /etc/systemd/system/fastapi.service > /dev/null <<EOT
+          [Unit]
+          Description=FastAPI Application
+          After=network.target
 
-            [Service]
-            User=ubuntu
-            Group=ubuntu
-            WorkingDirectory=/home/${{ vars.USER }}/hng12-stage2
-            ExecStart=/home/${{ vars.USER }}/hng12-stage2/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
-            Restart=always
+          [Service]
+          User=ubuntu
+          Group=ubuntu
+          WorkingDirectory=/home/${{ vars.USER }}/hng12-stage2
+          ExecStart=/home/${{ vars.USER }}/hng12-stage2/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+          Restart=always
 
-            [Install]
-            WantedBy=multi-user.target
-            EOF
+          [Install]
+          WantedBy=multi-user.target
+          EOT
 
             # Reload systemd, enable and start FastAPI service
             echo "*** 🔄 Starting FastAPI service... ***"
             sudo systemctl daemon-reload
             sudo systemctl enable fastapi
-            sudo systemctl start fastapi
+            sudo systemctl restart fastapi
 
             # Configure Nginx as a reverse proxy
             echo "*** 🛠 Configuring Nginx... ***"
-            sudo cat <<EOF | sudo tee /etc/nginx/sites-available/default
-            server {
-                listen 80;
-                server_name _;
+            sudo tee /etc/nginx/sites-available/default > /dev/null <<EOT
+          server {
+              listen 80;
+              server_name _;
 
-                location / {
-                    proxy_pass http://127.0.0.1:8000;
-                    proxy_set_header Host \$host;
-                    proxy_set_header X-Real-IP \$remote_addr;
-                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto \$scheme;
-                }
-            }
-            EOF
+              location / {
+                  proxy_pass http://127.0.0.1:8000;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto \$scheme;
+              }
+          }
+          EOT
 
             # Enable the Nginx configuration
-            sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+            sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
             sudo systemctl restart nginx
 
             # Open firewall ports
