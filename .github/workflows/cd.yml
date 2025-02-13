@@ -29,48 +29,54 @@ jobs:
       - name: Connect to EC2 and Deploy API
         run: |
           echo "🔗 Connecting to AWS EC2 instance to deploy API."
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.SERVER }} << 'EOF'
-            echo "📂 Updating package lists."
-            sudo apt update
-            
-            echo "🌐 Checking and Installing Nginx."
-            if ! command -v nginx &> /dev/null; then
-              echo "Installing Nginx..."
-              sudo apt install -y nginx
-              sudo systemctl enable nginx
-              sudo systemctl start nginx
-            fi
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ USER }}@${{ SERVER }} << 'EOF'
+            # Update packages
+            echo "*** 📂 Updating package lists ***"
+            sudo apt update && sudo apt upgrade -y
 
-            echo "📦 Installing PIP and dependencies."
-            sudo apt install python3-pip python3.12-venv -y
+            # Install necessary packages
+            echo "*** 📦 Installing dependencies ***"
+            sudo apt install -y nginx git python3 python3-pip python3-venv
 
-            echo "📂 Navigating to API directory."
-            cd /usr/share/nginx/html
-
-            echo "🔄 Pulling latest changes from repository."
+            # Clone the GitHub application repository
+            cd ~
             if [ -d "hng12-stage2" ]; then
-              echo "🔄 Pulling latest changes from repository."
-              cd hng12-stage2
-              sudo git reset --hard
-              sudo git pull origin main
+                echo "*** 🔄 Pulling latest changes from repository. ***"
+                cd hng12-stage2
+                git reset --hard
+                git pull origin main
             else
-              echo "📂 Cloning repository for the first time."
-              sudo git clone https://github.com/PeterOyelegbin/hng12-stage2.git
-              cd hng12-stage2
+                echo "*** 📂 Cloning repository for the first time. ***"
+                git clone https://github.com/PeterOyelegbin/hng12-stage2.git
+                cd hng12-stage2
             fi
 
-            echo "📦 Creating and activating a virtual environment outside the Nginx folder."
-            python3 -m venv /home/${{ secrets.USER }}/venv
-            source /home/${{ secrets.USER }}/venv/bin/activate
+            # Set up a virtual environment and install dependencies
+            echo "*** 📦 Setting up virtual environment... ***"
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
 
-            echo "📦 Installing project dependencies."
-            pip install --no-cache-dir -r requirements.txt
+            # Configure Nginx as a reverse proxy
+            echo "*** 🛠 Configuring Nginx... ***"
+            sudo cat <<EOF | sudo tee /etc/nginx/sites-available/default
+            server {
+                listen 80;
+                server_name _;
 
-            echo "🛠 Configuring Nginx."
-            sudo cp default /etc/nginx/sites-available/default
-            sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+                location / {
+                    proxy_pass http://127.0.0.1:8000;
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                }
+            }
+            EOF
 
-            echo "🔄 Restarting Nginx to apply changes."
+            # Enable the Nginx configuration
+            sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
             sudo systemctl restart nginx
 
             echo "🚀 Starting Uvicorn server."
