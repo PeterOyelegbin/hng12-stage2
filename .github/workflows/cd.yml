@@ -76,7 +76,7 @@ jobs:
 
               [Install]
               WantedBy=multi-user.target
-              EOF
+            EOF
 
             # Reload systemd, enable and start FastAPI service
             echo "*** 🔄 Starting FastAPI service... ***"
@@ -99,7 +99,7 @@ jobs:
                       proxy_set_header X-Forwarded-Proto \$scheme;
                   }
               }
-              EOF
+            EOF
 
             # Enable the Nginx configuration
             sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
