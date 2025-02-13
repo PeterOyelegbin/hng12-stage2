@@ -63,21 +63,21 @@ jobs:
 
             # Create a systemd service for FastAPI
             echo "*** 🛠 Creating systemd service for FastAPI... ***"
-            sudo tee /etc/systemd/system/fastapi.service > /dev/null <<EOF
-          [Unit]
-          Description=FastAPI Application
-          After=network.target
+            cat <<EOF | sudo tee /etc/systemd/system/fastapi.service
+              [Unit]
+              Description=FastAPI Application
+              After=network.target
 
-          [Service]
-          User=ubuntu
-          Group=ubuntu
-          WorkingDirectory=/home/${{ vars.USER }}/hng12-stage2
-          ExecStart=/home/${{ vars.USER }}/hng12-stage2/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
-          Restart=always
+              [Service]
+              User=ubuntu
+              Group=ubuntu
+              WorkingDirectory=/home/${{ USER }}/hng12-stage2
+              ExecStart=/home/${{ USER }}/hng12-stage2/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+              Restart=always
 
-          [Install]
-          WantedBy=multi-user.target
-          EOF
+              [Install]
+              WantedBy=multi-user.target
+              EOF
 
             # Reload systemd, enable and start FastAPI service
             echo "*** 🔄 Starting FastAPI service... ***"
@@ -88,19 +88,19 @@ jobs:
             # Configure Nginx as a reverse proxy
             echo "*** 🛠 Configuring Nginx... ***"
             sudo tee /etc/nginx/sites-available/default > /dev/null <<EOF
-          server {
-              listen 80;
-              server_name _;
+              server {
+                  listen 80;
+                  server_name _;
 
-              location / {
-                  proxy_pass http://127.0.0.1:8000;
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
+                  location / {
+                      proxy_pass http://127.0.0.1:8000;
+                      proxy_set_header Host \$host;
+                      proxy_set_header X-Real-IP \$remote_addr;
+                      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                      proxy_set_header X-Forwarded-Proto \$scheme;
+                  }
               }
-          }
-          EOF
+              EOF
 
             # Enable the Nginx configuration
             sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
