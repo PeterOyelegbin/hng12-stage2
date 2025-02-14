@@ -22,6 +22,7 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
+          echo "${{ secrets.DEV_KP }}"
           echo "${{ secrets.DEV_KP }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ vars.SERVER }} >> ~/.ssh/known_hosts
