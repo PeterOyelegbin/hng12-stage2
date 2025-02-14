@@ -22,10 +22,11 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo -e "${{ secrets.DEV_KP }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.DEV_KP }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ vars.SERVER }} >> ~/.ssh/known_hosts
           cat ~/.ssh/known_hosts  # Debug: Display known hosts
+          ls -la ~/.ssh  # Debug: List SSH directory contents
 
       - name: Connect to EC2 and Deploy API
         run: |
