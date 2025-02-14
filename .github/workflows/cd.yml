@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy API
+    name: Deploy Application
     runs-on: ubuntu-latest
 
     steps:
@@ -80,7 +80,7 @@ jobs:
                       proxy_set_header X-Forwarded-Proto \$scheme;
                   }
               }
-            EOF
+              EOF
 
             # Enable the Nginx configuration
             sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
