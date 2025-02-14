@@ -25,6 +25,7 @@ jobs:
           echo -e "${{ secrets.DEV_KP }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ vars.SERVER }} >> ~/.ssh/known_hosts
+          cat ~/.ssh/known_hosts  # Debug: Display known hosts
 
       - name: Connect to EC2 and Deploy API
         run: |
@@ -59,7 +60,7 @@ jobs:
             source venv/bin/activate
             pip install --upgrade pip
             pip install -r requirements.txt
-            
+
             # Configure a systemd service for FastAPI
             echo "*** 🛠 Configure systemd service for FastAPI... ***"
             sudo cp fastapi.service /etc/systemd/system/fastapi.service
